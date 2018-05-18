@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Guess that quote!</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <script src="main.js"></script>
+        <link rel="stylesheet" href="main.css">
+    </head>
+    <body onload="init()">
+        <div id="groups" style="display: none">
+            <h2>Select which group you'd like to pull quotes from</h2>
+        </div>
+        <div id="app" style="display: none">
+            <header>
+                <h1>Guess that quote!</h1>
+            </header>
+            <hr/>
+            <div id="dyn">
+                <p id="quote"></p>
+                <hr/>
+                <div id="reveal">
+                    <p>Quote by <span id="author"></span></p>
+                    <p>Posted by <span id="poster"></span> on <span id="time"></span></p>
+                    <p>Received <span id="likes"></span> likes. <span id="liked"></span></p>
+                </div>
+            </div>
+          <div class="controls">
+            <button id="revealButton">Reveal</button>
+            <button id="newQuoteButton">Next quote</button>
+            <!--<button onclick="toggleLike()" id="likeButton"></button>
+                <button onclick="showFullMessage()">Show original message</button>-->
+          </div>
+          <footer>
+              <p>© 2018 Alex Luckerman. powered by GroupMe®</p>
+              <p>Keyboard shortcuts: Reveal quote (r), Next quote (n)</p></footer>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,43 @@
+body {
+  text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
+  /*box-sizing: border-box;*/
+  font-size: 1em;
+}
+ 
+h1 {
+    font-size: 3em;
+}
+ 
+#quote {
+  /*max-width: 90%;*/
+  font-size: 2em;
+}
+
+#loading {
+   font-size: 4em;
+}
+
+span {
+  font-weight: bold;
+}
+
+#reveal {
+  display: none;
+}
+
+#group {
+    display: none;
+}
+
+footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+hr {
+  margin: auto;
+  width: 40%;
+}
