@@ -4,7 +4,7 @@ function GroupMe(client_id, groupId) {
         if (typeof this.auth != "string") {
             window.location = "https://oauth.groupme.com/oauth/authorize?client_id=" + client_id;
         }
-    this.groupId = groupId;
+
     this.authToken = "?token=" + this.auth;
     this.apiLink = "https://api.groupme.com/v3/";
     
@@ -18,11 +18,15 @@ function GroupMe(client_id, groupId) {
         }
         return JSON.parse(xhr.response).response;
     };
-    
-    this.groupMembers = this.makeRequest("GET", "groups/" + this.groupId, "").members;
+
     this.userId = this.makeRequest("GET", "users/me", "").id;
     this.groupList = this.makeRequest("GET", "groups", "&per_pageomit=members");
-    
+
+    if (typeof groupId != "undefined") {
+        this.groupId = groupId;
+        this.groupMembers = this.makeRequest("GET", "groups/" + this.groupId, "").members;
+    }
+
     this.fetchMessages = function (quotebook, earliestMessage, second) {
         quotebook = typeof quotebook != 'undefined' ? quotebook : [];
         var loaded = loaded | false;
@@ -119,7 +123,8 @@ function QuoteGenerator(quotebook, user) {
 }
 
 // Begin QuoteGame specific code
-var storage, messagesViewed;
+var storage, messagesViewed, gm;
+var settingsShowing = false;
 var NUM_MESSAGES_PER_REQ = 100, NUM_GUESS_OPTIONS = 4;
 
 function init() {
@@ -127,21 +132,25 @@ function init() {
     storage = window.localStorage;
     messagesViewed = parseInt(storage.getItem("QuoteGame_msgsViewed")) || 0;
     var groupId = storage.getItem("QuoteGame_groupId");
-    var gm;
     if (groupId !== null) {
         gm = new GroupMe("ZDxIRTOlmsiv6iOwlmLextWonlTK5vGqB6rWI8J2dnJfkiRB", groupId);
-        loadQuotes(gm);
+        loadQuotes();
     }
     else {
         gm = new GroupMe("ZDxIRTOlmsiv6iOwlmLextWonlTK5vGqB6rWI8J2dnJfkiRB");
-        displayGroups(gm);
+        displayGroups();
     }
 }
 
-function displayGroups(gm) {
+function displayGroups() {
     var groups = gm.groupList;
     var groupDiv = document.getElementById("groups");
-    for(var i = 0; i < groups.length; i++) {
+    while(groupDiv.firstChild) {
+        groupDiv.removeChild(groupDiv.firstChild);
+    }
+    var heading = document.createElement("h2");
+    var headingText = document.createTextNode("Select which group you'd like to pull quotes from");
+    for(var i = 0, j = groups.length; i < j; i++) {
         var element = document.createElement("p");
         var textNode = document.createTextNode(groups[i].name);
         element.appendChild(textNode);
@@ -152,12 +161,12 @@ function displayGroups(gm) {
             gm.groupId = groups[parseInt(e.target.id.substring(5))].id;
             storage.setItem("QuoteGame_groupId", gm.groupId);
             groupDiv.style.display = "none";
-            loadQuotes(gm);
+            loadQuotes();
         });
     groupDiv.style.display = "block";
 }
 
-function loadQuotes(gm) {
+function loadQuotes() {
     var quotebook = gm.fetchMessages();
     var user = gm.userId;
     var qg = new QuoteGenerator(quotebook, user);
@@ -171,6 +180,8 @@ function loadQuotes(gm) {
             revealAnswer();
         } else if (e.key == "g") {
             displayGroups(gm);
+        } else if (e.key == "s") {
+            toggleSettings();
         } else if (e.key == "v") {
             console.log(gm);
             console.log(quotebook);
@@ -180,7 +191,9 @@ function loadQuotes(gm) {
     
     document.getElementById("revealButton").addEventListener("click", revealAnswer);
     document.getElementById("newQuoteButton").addEventListener("click", function (qg) { renderQuote(qg); });
-    
+    document.getElementsByClassName("settings-toggle")[0].addEventListener("click", toggleSettings);
+    document.getElementsByClassName("settings-toggle")[1].addEventListener("click", toggleSettings);
+
     document.getElementById("app").style.display = "block";
     window.onunload = function() {
         window.localStorage.setItem("QuoteGame_msgsViewed", messagesViewed);
@@ -220,4 +233,52 @@ function toggleLike() {
     else {
         //like
     }
+}
+
+function toggleSettings() {
+    var settingsDiv = document.getElementsByClassName("settings")[0];
+    var settings = JSON.parse(storage.getItem("QuoteGame_settings")) | {};
+    var savegroup = document.getElementsByName("savegroup")[0];
+    var gamemode = document.getElementsByName("gamemode");
+    var numoptions = document.getElementsByName("numoptions")[0];
+    if (settingsShowing) {
+        // save all settings currently in the system
+        settings.saveGroup = savegroup.checked;
+        for(var i = 0, j = gamemode.length; i < j; i++) {
+            if(gamemode[i].checked) {
+                settings.gamemode = i;
+            }
+        }        
+        settings.numoptions = numoptions.value;
+        storage.setItem("QuoteGame_settings", JSON.stringify(settings));
+        // apply settings changes
+        loadSettings(settings);
+        // hide the settings dialog
+        settingsDiv.style.display = "none";
+    }
+    else {
+        // load current settings into the settings div
+        savegroup.checked = settings.saveGroup;
+        gamemode.checked = settings.gamemode;
+        document.getElementById("numviewed").innerHTML = messagesViewed;
+        // show the settings div
+        settingsDiv.style.display = "block";
+    }
+    // toggle the settingsShowing var
+    settingsShowing = !settingsShowing;
+}
+
+function loadSettings(settings) {
+    settings = settings | JSON.parse(storage.getItem("QuoteGame_settings"));
+}
+
+function clearGroup() {
+    storage.removeItem("QuoteGame_groupId");
+    toggleSettings();
+    document.getElementById("app").style.display = "none";
+    displayGroups();
+}
+
+function processGuess() {
+    
 }

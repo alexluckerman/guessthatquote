@@ -35,9 +35,21 @@ footer {
     left: 0;
     bottom: 0;
     width: 100%;
+    z-index: -1;
 }
 
 hr {
   margin: auto;
   width: 40%;
+}
+
+.settings {
+  background-color: white;
+  box-sizing: border-box;
+  border: thin solid black;
+  position: fixed;
+  top: 5%;
+  height: 90%;
+  left: 5%;
+  width: 90%;
 }
