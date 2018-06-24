@@ -152,16 +152,17 @@ var settingsShowing = false;
 var NUM_MESSAGES_PER_REQ = 100, NUM_GUESS_OPTIONS = 4;
 
 function init() {
-    
+    // this one is for gtq.alexlucky.me
+    var client_id = "Ev579DJHgZMDSLeqNWQufy2l6bA2BDJPuK2XXcJ64jLsxXJb";
     storage = window.localStorage;
     messagesViewed = parseInt(storage.getItem("QuoteGame_msgsViewed")) || 0;
     var groupId = storage.getItem("QuoteGame_groupId");
     if (groupId !== null) {
-        gm = new GroupMe("ZDxIRTOlmsiv6iOwlmLextWonlTK5vGqB6rWI8J2dnJfkiRB", groupId);
+        gm = new GroupMe(client_id, groupId);
         loadQuotes();
     }
     else {
-        gm = new GroupMe("ZDxIRTOlmsiv6iOwlmLextWonlTK5vGqB6rWI8J2dnJfkiRB");
+        gm = new GroupMe(client_id);
         displayGroups();
     }
 }
