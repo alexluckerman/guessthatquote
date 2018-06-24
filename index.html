@@ -1,50 +1,49 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Guess that quote!</title>
+        <title>Guess That Quote!</title>
         <meta name="viewport" content="width=device-width,initial-scale=1.0">
         <script src="main.js"></script>
         <link rel="stylesheet" href="main.css">
     </head>
     <body onload="init()">
-        <div id="groups" style="display: none">
-            
-        </div>
+        <div id="groups" style="display: none"></div>
         <div id="app" style="display: none">
-            <header>
-                <h1>Guess that quote!</h1>
-            </header>
-            <hr/>
-            <p id="quote"></p>
-            <hr/>
-            <div id="reveal">
-                <p>Quote by <span id="author"></span></p>
-                <p>Posted by <span id="poster"></span> on <span id="time"></span></p>
-                <p>Received <span id="likes"></span> likes. <span id="liked"></span></p>
+                <header>
+                    <h1>Guess That Quote!</h1>
+                </header>
+                <hr/>
+                <p id="quote"></p>
+                <hr/>
+                <div id="reveal">
+                    <p>Quote by <span id="author"></span></p>
+                    <p>Posted by <span id="poster"></span> on <span id="time"></span></p>
+                    <p>Received <span id="likes"></span> likes. <span id="liked"></span></p>
+                </div>
+            <div class="controls">
+                <button id="revealButton">Reveal</button>
+                <button id="newQuoteButton">Next quote</button>
+                <!--<button onclick="toggleLike()" id="likeButton"></button>
+                    <button onclick="showFullMessage()">Show original message</button>-->
             </div>
-          <div class="controls">
-            <button id="revealButton">Reveal</button>
-            <button id="newQuoteButton">Next quote</button>
-            <!--<button onclick="toggleLike()" id="likeButton"></button>
-                <button onclick="showFullMessage()">Show original message</button>-->
-          </div>
-          <div class="settings" style="display:none">
-             <p><input type="checkbox" name="savegroup"> Remember which group I select</p>
-             <button onclick="clearGroup()">Clear my group selection</button>
-             <h6>Game mode</h6>
-             <ul>
-                <li><input type="radio" name="gamemode"> Give me options to choose from</li>
-                    <p>Number of options <input type="number" name="numoptions" min="2"></p>
-                <li><input type="radio" name="gamemode"> Let me type in my guess</li>
-                <li><input type="radio" name="gamemode"> I don't want it to be a game</li>
-            </ul>
-            <p>Total number of quotes viewed: <span id="numviewed"></span></p>
-            <p class="settings-toggle">Close settings</p>
-          </div>
-          <footer>
+            <div class="settings" style="display:none">
+                <h6>Group selection</h6>
+                <p><input type="checkbox" name="savegroup"> Remember which group I select</p>
+                <button onclick="clearGroup()">Clear my group selection</button>
+                <h6>Game mode</h6>
+                <ul>
+                    <li><input type="radio" name="gamemode"> Give me options to choose from</li>
+                        <p>Number of options <input type="number" name="numoptions" min="2"></p>
+                    <li><input type="radio" name="gamemode"> Let me type in my guess</li>
+                    <li><input type="radio" name="gamemode"> I don't want it to be a game</li>
+                </ul>
+                <p>Total number of quotes viewed: <span id="numviewed"></span></p>
+                <p class="settings-toggle">Close and save settings</p>
+            </div>
+            <footer>
+              <p><span class="settings-toggle">Open settings</span> | Keyboard shortcuts: Reveal quote (r), Next quote (n)</p>
               <p>&copy; 2018 Alex Luckerman. powered by GroupMe&reg;</p>
-              <p>Keyboard shortcuts: Reveal quote (r), Next quote (n)</p></footer>
-              <p class="settings-toggle">Open settings</p>
+            </footer>
         </div>
     </body>
 </html>

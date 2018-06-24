@@ -20,16 +20,35 @@ function GroupMe(client_id, groupId) {
     };
 
     this.userId = this.makeRequest("GET", "users/me", "").id;
-    this.groupList = this.makeRequest("GET", "groups", "&per_pageomit=members");
+
+    this.groupList = function () {
+        var groups = [], cont = true, page = 1, start = Date.now();
+        while(cont) {
+            var resp = this.makeRequest("GET", "groups", "&page="+page+"&omit=members");
+            if (resp.length == 0) {
+                cont = false;
+            }
+            else {
+                for (var i = 0; i < resp.length; i++) {
+                    groups.push(resp[i]);
+                }
+            }
+            page++;
+        }
+        console.log("Time to fetch groups: " + (Date.now() - start) + " ms.");
+        return groups;
+    }
 
     if (typeof groupId != "undefined") {
         this.groupId = groupId;
         this.groupMembers = this.makeRequest("GET", "groups/" + this.groupId, "").members;
     }
 
+    
     this.fetchMessages = function (quotebook, earliestMessage, second) {
+        var start = Date.now();
         quotebook = typeof quotebook != 'undefined' ? quotebook : [];
-        var loaded = loaded | false;
+        var loaded = loaded || false;
         
         var before = typeof earliestMessage !== 'undefined' ? "&before_id=" + earliestMessage : "";
         var url = before + "&limit=" + NUM_MESSAGES_PER_REQ;
@@ -64,12 +83,17 @@ function GroupMe(client_id, groupId) {
             window.localStorage.setItem('GroupMe_msgCount', msgResp.count);
             window.localStorage.setItem('GroupMe_currGroupMsgs', JSON.stringify(quotebook));
             console.log("All quotes loaded");
+            console.log("Time to fetch messages: " + (Date.now() - start) + " ms.");
             return quotebook;
+            
         }
         else {
+            console.log("Time to fetch messages: " + (Date.now() - start) + " ms.");
             return this.fetchMessages(quotebook, earliestMessage, true);
         }
+        
     }
+    
     
     this.likeMessage = function (msg) {
         return 200 == this.makeRequest("POST", "messages/" + this.groupId + "/" + msg.id + "/like");
@@ -143,14 +167,16 @@ function init() {
 }
 
 function displayGroups() {
-    var groups = gm.groupList;
+    var groups = gm.groupList();
     var groupDiv = document.getElementById("groups");
     while(groupDiv.firstChild) {
         groupDiv.removeChild(groupDiv.firstChild);
     }
     var heading = document.createElement("h2");
     var headingText = document.createTextNode("Select which group you'd like to pull quotes from");
-    for(var i = 0, j = groups.length; i < j; i++) {
+    heading.appendChild(headingText);
+    groupDiv.appendChild(heading);
+    for(i = 0, j = groups.length; i < j; i++) {
         var element = document.createElement("p");
         var textNode = document.createTextNode(groups[i].name);
         element.appendChild(textNode);
@@ -164,9 +190,22 @@ function displayGroups() {
             loadQuotes();
         });
     groupDiv.style.display = "block";
+    /*var prev = document.createElement("button");
+    prev.value = "Prev"
+    var next = document.createElement("button");
+    next.value = "Next";
+    prev.addEventListener("click", function(e) {
+        gm.groupId = groups[parseInt(e.target.id.substring(5))].id;
+        storage.setItem("QuoteGame_groupId", gm.groupId);
+        groupDiv.style.display = "none";
+        loadQuotes();
+    });*/
 }
 
 function loadQuotes() {
+    var settings = JSON.parse(storage.getItem("QuoteGame_settings"));
+    loadSettings(settings);
+
     var quotebook = gm.fetchMessages();
     var user = gm.userId;
     var qg = new QuoteGenerator(quotebook, user);
@@ -190,7 +229,7 @@ function loadQuotes() {
     };
     
     document.getElementById("revealButton").addEventListener("click", revealAnswer);
-    document.getElementById("newQuoteButton").addEventListener("click", function (qg) { renderQuote(qg); });
+    document.getElementById("newQuoteButton").addEventListener("click", function() { renderQuote(qg); });
     document.getElementsByClassName("settings-toggle")[0].addEventListener("click", toggleSettings);
     document.getElementsByClassName("settings-toggle")[1].addEventListener("click", toggleSettings);
 
@@ -237,7 +276,7 @@ function toggleLike() {
 
 function toggleSettings() {
     var settingsDiv = document.getElementsByClassName("settings")[0];
-    var settings = JSON.parse(storage.getItem("QuoteGame_settings")) | {};
+    var settings = JSON.parse(storage.getItem("QuoteGame_settings")) || {};
     var savegroup = document.getElementsByName("savegroup")[0];
     var gamemode = document.getElementsByName("gamemode");
     var numoptions = document.getElementsByName("numoptions")[0];
@@ -258,8 +297,17 @@ function toggleSettings() {
     }
     else {
         // load current settings into the settings div
+        // show default options if none are stored
+        if(typeof settings.gamemode == "undefined") {
+            settings = {
+                saveGroup:true,
+                gamemode:2
+            }
+        }
         savegroup.checked = settings.saveGroup;
-        gamemode.checked = settings.gamemode;
+        gamemode[settings.gamemode].checked = true;
+        numoptions.value = settings.numoptions;
+        numoptions.max = gm.groupMembers.length;
         document.getElementById("numviewed").innerHTML = messagesViewed;
         // show the settings div
         settingsDiv.style.display = "block";
@@ -269,7 +317,12 @@ function toggleSettings() {
 }
 
 function loadSettings(settings) {
-    settings = settings | JSON.parse(storage.getItem("QuoteGame_settings"));
+    console.log(settings);
+    var defaultSettings = {
+        saveGroup:true,
+        gamemode:2
+    }
+    settings = settings || defaultSettings;
 }
 
 function clearGroup() {

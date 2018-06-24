@@ -22,6 +22,10 @@ span {
   font-weight: bold;
 }
 
+.settings-toggle {
+  font-weight: normal;
+}
+
 #reveal {
   display: none;
 }
