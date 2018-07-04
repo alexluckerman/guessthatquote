@@ -2,8 +2,10 @@
 function GroupMe(client_id, groupId) {
     this.auth = new URL(window.location).searchParams.get("access_token");
         if (typeof this.auth != "string") {
+            console.log("Couldn't find access token in URL");
             var token = window.localStorage.getItem("GroupMe_accessToken")
-            if (token !== null) {
+            if (token !== null && token != "null") {
+                console.log("Found token in localStorage: " + token);
                 this.auth = token;
             }
             else {
@@ -13,7 +15,7 @@ function GroupMe(client_id, groupId) {
 
     window.localStorage.setItem("GroupMe_accessToken", this.auth)
     var oldUrl = window.location.href.split("?"), newUrl;
-    if (oldUrl[1].indexOf("&") != -1) {
+    if (oldUrl.length > 1 && oldUrl[1].indexOf("&") != -1) {
         newUrl = oldUrl[0] + oldUrl[1].split("&")[0];
     }
     else {
