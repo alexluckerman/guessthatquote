@@ -139,10 +139,17 @@ function Quote (quote, user) {
 function QuoteGenerator(quotebook, user) {
     this.quotebook = quotebook;
     this.user = user;
+    this.lastRandMsgNum = -1;
     this.getQuote = function () {
         var randMsgNum = Math.floor(Math.random() * this.quotebook.length);
         var quote = new Quote(quotebook[randMsgNum], this.user);
-        return quote;
+        if(this.lastRandMsgNum == randMsgNum) {
+            return this.getQuote();
+        }
+        else {
+            this.lastRandMsgNum = randMsgNum
+            return quote;
+        }
     }
 }
 
@@ -152,8 +159,7 @@ var settingsShowing = false;
 var NUM_MESSAGES_PER_REQ = 100, NUM_GUESS_OPTIONS = 4;
 
 function init() {
-    // this one is for gtq.alexlucky.me
-    var client_id = "Ev579DJHgZMDSLeqNWQufy2l6bA2BDJPuK2XXcJ64jLsxXJb";
+    var client_id = "Ev579DJHgZMDSLeqNWQufy2l6bA2BDJPuK2XXcJ64jLsxXJb"; // this one is for gtq.alexlucky.me
     storage = window.localStorage;
     messagesViewed = parseInt(storage.getItem("QuoteGame_msgsViewed")) || 0;
     var groupId = storage.getItem("QuoteGame_groupId");
