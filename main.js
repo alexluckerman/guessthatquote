@@ -2,8 +2,30 @@
 function GroupMe(client_id, groupId) {
     this.auth = new URL(window.location).searchParams.get("access_token");
         if (typeof this.auth != "string") {
-            window.location = "https://oauth.groupme.com/oauth/authorize?client_id=" + client_id;
+            var token = window.localStorage.getItem("GroupMe_accessToken")
+            if (token !== null) {
+                this.auth = token;
+            }
+            else {
+                window.location = "https://oauth.groupme.com/oauth/authorize?client_id=" + client_id;
+            }
         }
+
+    window.localStorage.setItem("GroupMe_accessToken", this.auth)
+    var oldUrl = window.location.href.split("?"), newUrl;
+    if (oldUrl[1].indexOf("&") != -1) {
+        newUrl = oldUrl[0] + oldUrl[1].split("&")[0];
+    }
+    else {
+        newUrl = oldUrl[0]
+    }
+    var state = {}
+    window.history.replaceState(state, document.title, newUrl);
+
+    this.clearAuth = function () {
+        window.localStorage.removeItem("GroupMe_accessToken");
+        window.location = "https://oauth.groupme.com/oauth/authorize?client_id=" + client_id;
+    }
 
     this.authToken = "?token=" + this.auth;
     this.apiLink = "https://api.groupme.com/v3/";
@@ -19,7 +41,9 @@ function GroupMe(client_id, groupId) {
         return JSON.parse(xhr.response).response;
     };
 
-    this.userId = this.makeRequest("GET", "users/me", "").id;
+    this.user = this.makeRequest("GET", "users/me", "");
+    this.userId = this.user.id;
+    this.userName = this.user.name;
 
     this.groupList = function () {
         var groups = [], cont = true, page = 1, start = Date.now();
@@ -310,6 +334,7 @@ function toggleSettings() {
         numoptions.value = settings.numoptions;
         numoptions.max = gm.groupMembers.length;
         document.getElementById("numviewed").innerHTML = messagesViewed;
+        document.getElementById("user").innerHTML = gm.userName;
         // show the settings div
         settingsDiv.style.display = "block";
     }
@@ -331,6 +356,10 @@ function clearGroup() {
     toggleSettings();
     document.getElementById("app").style.display = "none";
     displayGroups();
+}
+
+function clearUser() {
+    gm.clearAuth();
 }
 
 function processGuess() {
