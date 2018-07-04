@@ -1,29 +1,31 @@
 //GroupMe object: takes a client ID and an optional groupId, used to make all calls to the GroupMe API
 function GroupMe(client_id, groupId) {
+    
+    var dest = window.localStorage.getItem("GroupMe_destUrl");
+    if (dest !== null) {
+        window.localStorage.removeItem("GroupMe_destUrl");
+        window.location = dest;
+    }
+    
     this.auth = new URL(window.location).searchParams.get("access_token");
-        if (typeof this.auth != "string") {
-            console.log("Couldn't find access token in URL");
-            var token = window.localStorage.getItem("GroupMe_accessToken")
-            if (token !== null && token != "null") {
-                console.log("Found token in localStorage: " + token);
-                this.auth = token;
-            }
-            else {
-                window.location = "https://oauth.groupme.com/oauth/authorize?client_id=" + client_id;
-            }
+    if (typeof this.auth != "string") {
+        console.log("Couldn't find access token in URL");
+        var token = window.localStorage.getItem("GroupMe_accessToken")
+        if (token !== null && token != "null") {
+            console.log("Found token in localStorage: " + token);
+            this.auth = token;
         }
+        else {
+            window.localStorage.setItem("GroupMe_destUrl", window.location.href);
+            window.location = "https://oauth.groupme.com/oauth/authorize?client_id=" + client_id;
+        }
+    }
 
+    
+
+    window.history.replaceState({}, document.title, window.location.href.split("?")[0]);
     window.localStorage.setItem("GroupMe_accessToken", this.auth)
-    var oldUrl = window.location.href.split("?"), newUrl;
-    if (oldUrl.length > 1 && oldUrl[1].indexOf("&") != -1) {
-        newUrl = oldUrl[0] + oldUrl[1].split("&")[0];
-    }
-    else {
-        newUrl = oldUrl[0]
-    }
-    var state = {}
-    window.history.replaceState(state, document.title, newUrl);
-
+    
     this.clearAuth = function () {
         window.localStorage.removeItem("GroupMe_accessToken");
         window.location = "https://oauth.groupme.com/oauth/authorize?client_id=" + client_id;
@@ -154,8 +156,7 @@ function Quote (quote, user) {
             this.text = message[0];
             this.author = message[1];
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -171,9 +172,8 @@ function QuoteGenerator(quotebook, user) {
         var quote = new Quote(quotebook[randMsgNum], this.user);
         if(this.lastRandMsgNum == randMsgNum) {
             return this.getQuote();
-        }
-        else {
-            this.lastRandMsgNum = randMsgNum
+        } else {
+            this.lastRandMsgNum = randMsgNum;
             return quote;
         }
     }
@@ -188,8 +188,13 @@ function init() {
     var client_id = "Ev579DJHgZMDSLeqNWQufy2l6bA2BDJPuK2XXcJ64jLsxXJb"; // this one is for gtq.alexlucky.me
     storage = window.localStorage;
     messagesViewed = parseInt(storage.getItem("QuoteGame_msgsViewed")) || 0;
+    var params = new URL(window.location).searchParams;
     var groupId = storage.getItem("QuoteGame_groupId");
-    if (groupId !== null) {
+    if (typeof params.get("group") == "string" && typeof params.get("msg") == "string") {
+        gm = new GroupMe(client_id, params.get("group"));
+        loadQuotes(params.get("msg"));
+    }
+    else if (groupId !== null) {
         gm = new GroupMe(client_id, groupId);
         loadQuotes();
     }
@@ -235,14 +240,23 @@ function displayGroups() {
     });*/
 }
 
-function loadQuotes() {
+function loadQuotes(msg) {
     var settings = JSON.parse(storage.getItem("QuoteGame_settings"));
     loadSettings(settings);
 
     var quotebook = gm.fetchMessages();
     var user = gm.userId;
     var qg = new QuoteGenerator(quotebook, user);
-    renderQuote(qg);
+    if (msg !== undefined) {
+        for (var i = 0; i < quotebook.length; i++) {
+            var message = quotebook[i]
+            if (message.id == msg) {
+                renderQuote(qg, message);
+            }
+        }
+    } else {
+        renderQuote(qg);
+    }
     
     document.onkeypress = function(e) {
         e = e || window.event;
@@ -253,7 +267,7 @@ function loadQuotes() {
         } else if (e.key == "g") {
             displayGroups(gm);
         } else if (e.key == "s") {
-            toggleSettings();
+            revealShareLink();
         } else if (e.key == "v") {
             console.log(gm);
             console.log(quotebook);
@@ -263,6 +277,7 @@ function loadQuotes() {
     
     document.getElementById("revealButton").addEventListener("click", revealAnswer);
     document.getElementById("newQuoteButton").addEventListener("click", function() { renderQuote(qg); });
+    document.getElementById("shareButton").addEventListener("click", revealShareLink)
     document.getElementsByClassName("settings-toggle")[0].addEventListener("click", toggleSettings);
     document.getElementsByClassName("settings-toggle")[1].addEventListener("click", toggleSettings);
 
@@ -276,8 +291,20 @@ function revealAnswer() {
     document.getElementById("reveal").style.display = "inline";
 }
 
-function renderQuote(qg) {
-    var message = qg.getQuote();
+function revealShareLink() {
+    var shareUrl = document.getElementById("shareUrl"); 
+    shareUrl.style.display = "inline";
+    shareUrl.select();
+}
+
+function renderQuote(qg, msg) {
+    var message;
+    if (msg !== undefined) {
+        message = new Quote(msg, qg.user);
+    } else {
+        message = qg.getQuote();
+    }
+
     while (!message.process()) {
         message = qg.getQuote();
     }
@@ -288,13 +315,17 @@ function renderQuote(qg) {
     var reveal = document.getElementById("reveal");
     var time = document.getElementById("time");
     var likes = document.getElementById("likes");
+    var shareUrl = document.getElementById("shareUrl");
     
     reveal.style.display = "none";
+    shareUrl.style.display = "none";
+
     quote.innerHTML = message.text;
     author.innerHTML = message.author;
     poster.innerHTML = message.poster;
     time.innerHTML = message.time;
     likes.innerHTML = message.numLikes;
+    shareUrl.value = window.location.protocol + "//" + window.location.host + window.location.pathname + "?group=" + gm.groupId + "&msg=" + message.id;
     messagesViewed++;
 }
 
